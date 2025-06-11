@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>What's for Dinner? - Spin the Dinner Wheel</title>
+  <meta name="description" content="Can't decide what to eat? Spin the Dinner Wheel and let it pick your next meal from over 25 delicious dinner ideas!" />
+  <link rel="icon" href="favicon.ico" type="image/x-icon" />
+  <style>
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: linear-gradient(to bottom, #fefcea, #f1da36);
+      margin: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 40px 20px;
+    }
+
+    h1 {
+      font-size: 2.5em;
+      margin-bottom: 30px;
+    }
+
+    #canvas-container {
+      position: relative;
+    }
+
+    #spinner {
+      border-radius: 50%;
+      box-shadow: 0 0 15px rgba(0, 0, 0, 0.2);
+    }
+
+    .pointer {
+      position: absolute;
+      top: 0;
+      left: 50%;
+      width: 0;
+      height: 0;
+      border-left: 20px solid transparent;
+      border-right: 20px solid transparent;
+      border-bottom: 30px solid red;
+      transform: translateX(-50%);
+      z-index: 10;
+      animation: wiggle 0.3s infinite ease-in-out alternate;
+      transform-origin: bottom center;
+    }
+
+    @keyframes wiggle {
+      0% { transform: translateX(-50%) rotate(-5deg); }
+      100% { transform: translateX(-50%) rotate(5deg); }
+    }
+
+    .spin-btn {
+      margin-top: 30px;
+      padding: 12px 25px;
+      font-size: 18px;
+      background-color: #ff6f61;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      box-shadow: 2px 2px 8px rgba(0, 0, 0, 0.2);
+    }
+
+    .result {
+      font-size: 24px;
+      font-weight: bold;
+      margin-top: 20px;
+    }
+
+    .popup {
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      background: white;
+      padding: 30px 50px;
+      box-shadow: 0 0 20px rgba(0,0,0,0.3);
+      border-radius: 12px;
+      font-size: 24px;
+      z-index: 100;
+      display: none;
+      text-align: center;
+    }
+  </style>
+</head>
+<body>
+  <h1>What's for Dinner?</h1>
+  <div id="canvas-container">
+    <canvas id="spinner" width="600" height="600"></canvas>
+    <div class="pointer"></div>
+  </div>
+  <button class="spin-btn" onclick="spinWheel()">Spin the Wheel</button>
+  <div class="result" id="result"></div>
+  <div id="popup" class="popup"></div>
+
+  <script>
+    const canvas = document.getElementById('spinner');
+    const ctx = canvas.getContext('2d');
+    const result = document.getElementById('result');
+    const popup = document.getElementById('popup');
+
+    const options = [
+      "Pizza", "Tacos", "Pasta", "Salad", "Sushi", "Burgers", "Curry", "Stir Fry",
+      "Steak", "Falafel", "Ramen", "Grilled Cheese", "Enchiladas", "BBQ Chicken",
+      "Fish Tacos", "Lasagna", "Quesadillas", "Pho", "Meatballs", "Pad Thai",
+      "Eggplant Parm", "Chicken Wings", "Shakshuka", "Chili", "Lamb Chops"
+    ];
+
+    const colors = [
+      '#e57373', '#ba68c8', '#7986cb', '#4db6ac', '#81c784', '#ffb74d', '#a1887f',
+      '#f06292', '#64b5f6', '#aed581', '#ff8a65', '#90a4ae', '#ce93d8', '#9575cd',
+      '#4fc3f7', '#4dd0e1', '#81d4fa', '#f48fb1', '#ffab91', '#c5e1a5', '#dce775',
+      '#ffd54f', '#e1bee7', '#b39ddb', '#ffcc80'
+    ];
+
+    const center = canvas.width / 2;
+    const radius = center;
+    const segmentAngle = (2 * Math.PI) / options.length;
+    let currentAngle = 0;
+    let spinning = false;
+
+    const tickAudio = new Audio('https://assets.mixkit.co/active_storage/sfx/2212/2212-preview.mp3');
+    tickAudio.volume = 0.4;
+
+    const winAudio = new Audio('https://assets.mixkit.co/active_storage/sfx/422/422-preview.mp3');
+    winAudio.volume = 0.6;
+
+    function drawWheel() {
+      for (let i = 0; i < options.length; i++) {
+        const angle = i * segmentAngle;
+        ctx.beginPath();
+        ctx.moveTo(center, center);
+        ctx.arc(center, center, radius, angle, angle + segmentAngle);
+        ctx.fillStyle = colors[i % colors.length];
+        ctx.fill();
+        ctx.save();
+        ctx.translate(center, center);
+        ctx.rotate(angle + segmentAngle / 2);
+        ctx.textAlign = 'right';
+        ctx.fillStyle = '#fff';
+        ctx.font = 'bold 16px sans-serif';
+        ctx.fillText(options[i], radius - 10, 6);
+        ctx.restore();
+      }
+    }
+
+    function spinWheel() {
+      if (spinning) return;
+      spinning = true;
+      result.innerHTML = "";
+      popup.style.display = "none";
+
+      const spinTime = Math.random() * 1500 + 2000;
+      const spins = Math.random() * 3 + 3;
+      const targetAngle = currentAngle + spins * 2 * Math.PI;
+
+      const start = performance.now();
+
+      function animate(time) {
+        const elapsed = time - start;
+        const progress = Math.min(elapsed / spinTime, 1);
+        const eased = 1 - Math.pow(1 - progress, 4);
+        currentAngle = targetAngle * eased;
+
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        ctx.save();
+        ctx.translate(center, center);
+        ctx.rotate(currentAngle);
+        ctx.translate(-center, -center);
+        drawWheel();
+        ctx.restore();
+
+        if (progress < 1) {
+          if (elapsed % 100 < 50) tickAudio.play().catch(() => {});
+          requestAnimationFrame(animate);
+        } else {
+          const normalizedAngle = (2 * Math.PI - (currentAngle % (2 * Math.PI))) % (2 * Math.PI);
+          const index = Math.floor(normalizedAngle / segmentAngle);
+          const choice = options[index];
+          result.innerHTML = `🎉 ${choice}! 🎉`;
+          popup.innerHTML = `🍽️ You should have <strong>${choice}</strong> tonight!`;
+          popup.style.display = 'block';
+          winAudio.play().catch(() => {});
+          spinning = false;
+        }
+      }
+
+      requestAnimationFrame(animate);
+    }
+
+    drawWheel();
+  </script>
+</body>
+</html>
