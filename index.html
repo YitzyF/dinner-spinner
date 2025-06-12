@@ -33,22 +33,15 @@
 
     .pointer {
       position: absolute;
-      top: 0;
+      top: -10px;
       left: 50%;
       width: 0;
       height: 0;
-      border-left: 20px solid transparent;
-      border-right: 20px solid transparent;
+      border-left: 15px solid transparent;
+      border-right: 15px solid transparent;
       border-bottom: 30px solid red;
       transform: translateX(-50%);
       z-index: 10;
-      animation: wiggle 0.3s infinite ease-in-out alternate;
-      transform-origin: bottom center;
-    }
-
-    @keyframes wiggle {
-      0% { transform: translateX(-50%) rotate(-5deg); }
-      100% { transform: translateX(-50%) rotate(5deg); }
     }
 
     .spin-btn {
@@ -81,7 +74,6 @@
       font-size: 24px;
       z-index: 100;
       display: none;
-      text-align: center;
     }
   </style>
 </head>
@@ -176,8 +168,9 @@
           if (elapsed % 100 < 50) tickAudio.play().catch(() => {});
           requestAnimationFrame(animate);
         } else {
-          const normalizedAngle = (2 * Math.PI - (currentAngle % (2 * Math.PI))) % (2 * Math.PI);
-          const index = Math.floor(normalizedAngle / segmentAngle);
+          // Corrected angle for fixed pointer at top
+          const normalizedAngle = currentAngle % (2 * Math.PI);
+          const index = (options.length - Math.floor(normalizedAngle / segmentAngle)) % options.length;
           const choice = options[index];
           result.innerHTML = `🎉 ${choice}! 🎉`;
           popup.innerHTML = `🍽️ You should have <strong>${choice}</strong> tonight!`;
@@ -194,3 +187,4 @@
   </script>
 </body>
 </html>
+
