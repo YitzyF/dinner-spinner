@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>What's for Dinner? - Spin the Dinner Wheel</title>
   <meta name="description" content="Can't decide what to eat? Spin the Dinner Wheel and let it pick your next meal from over 25 delicious dinner ideas!" />
+  <link rel="stylesheet" href="styles.css" />
   <link rel="icon" href="favicon.ico" type="image/x-icon" />
   <style>
     body {
@@ -168,7 +169,6 @@
           if (elapsed % 100 < 50) tickAudio.play().catch(() => {});
           requestAnimationFrame(animate);
         } else {
-          // Corrected angle for fixed pointer at top
           const normalizedAngle = currentAngle % (2 * Math.PI);
           const index = (options.length - Math.floor(normalizedAngle / segmentAngle)) % options.length;
           const choice = options[index];
@@ -187,4 +187,5 @@
   </script>
 </body>
 </html>
+
 
